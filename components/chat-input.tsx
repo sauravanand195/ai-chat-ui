@@ -33,10 +33,10 @@ export default function ChatInput({
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
                     rows={1}
+                    disabled={isLoading}
                     placeholder="Type your message here..."
-                    className="max-h-40 min-h-[52px] flex-1 resize-none bg-transparent px-2 py-3 text-sm text-white outline-none placeholder:text-neutral-500"
+                    className="max-h-40 min-h-[52px] flex-1 resize-none bg-transparent px-2 py-3 text-sm text-white outline-none placeholder:text-neutral-500 disabled:cursor-not-allowed disabled:opacity-60"
                 />
-
                 <button
                     type="submit"
                     disabled={isLoading}

@@ -1,31 +1,54 @@
-const mockReplies = [
-    "This response is coming from your Next.js API route, not from the frontend anymore.",
-    "Nice — you have now connected your chat UI to a backend endpoint.",
-    "Your integration step is working. The next upgrade will be replacing this mock response with a real model call.",
-    "This is a mocked assistant reply returned by app/api/chat/route.ts.",
-];
+type IncomingMessage = {
+    role: "user" | "assistant" | "system";
+    content: string;
+};
 
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const message = body?.message;
+        const messages = body?.messages as IncomingMessage[] | undefined;
 
-        if (!message || typeof message !== "string") {
+        if (!messages || !Array.isArray(messages) || messages.length === 0) {
             return Response.json(
-                { error: "A valid message is required." },
+                { error: "A valid messages array is required." },
                 { status: 400 }
             );
         }
 
-        const randomReply =
-            mockReplies[Math.floor(Math.random() * mockReplies.length)];
+        const response = await fetch("http://localhost:11434/api/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                model: "llama3.2:3b",
+                messages,
+                stream: false,
+            }),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+
+            return Response.json(
+                { error: `Ollama request failed: ${errorText}` },
+                { status: 500 }
+            );
+        }
+
+        const data = await response.json();
 
         return Response.json({
-            reply: `${randomReply}\n\nYou said: "${message}"`,
+            reply: data?.message?.content ?? "No response returned by Ollama.",
         });
-    } catch {
+    } catch (error) {
         return Response.json(
-            { error: "Something went wrong while processing the request." },
+            {
+                error:
+                    error instanceof Error
+                        ? error.message
+                        : "Something went wrong while talking to Ollama.",
+            },
             { status: 500 }
         );
     }

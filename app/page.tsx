@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import ChatHeader from "@/components/chat-header";
 import ChatInput from "@/components/chat-input";
 import ChatMessages from "@/components/chat-messages";
@@ -19,8 +19,6 @@ export default function Home() {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
 
-  const hasMessages = useMemo(() => messages.length > 0, [messages]);
-
   const handleSendMessage = async (value: string) => {
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -29,24 +27,37 @@ export default function Home() {
       createdAt: getCurrentTime(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setIsLoading(true);
 
     try {
+      const apiMessages = [
+        {
+          role: "system" as const,
+          content:
+            "You are a helpful AI assistant inside a Next.js learning project. Keep answers clear, short, and beginner friendly.",
+        },
+        ...updatedMessages.map(({ role, content }) => ({
+          role,
+          content,
+        })),
+      ];
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: value,
+          messages: apiMessages,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data?.error || "Failed to fetch response");
+        throw new Error(data?.error || "Failed to fetch chatbot response.");
       }
 
       const assistantMessage: ChatMessage = {
@@ -80,9 +91,7 @@ export default function Home() {
 
       <section className="flex min-w-0 flex-1 flex-col">
         <ChatHeader />
-        {hasMessages ? (
-          <ChatMessages messages={messages} />
-        ) : null}
+        <ChatMessages messages={messages} />
         <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
       </section>
     </main>

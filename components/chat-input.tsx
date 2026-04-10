@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, KeyboardEvent, useState } from "react";
 
 interface ChatInputProps {
     onSendMessage: (value: string) => void;
@@ -13,14 +13,24 @@ export default function ChatInput({
 }: ChatInputProps) {
     const [value, setValue] = useState("");
 
-    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
+    const submitMessage = () => {
         const trimmed = value.trim();
         if (!trimmed || isLoading) return;
 
         onSendMessage(trimmed);
         setValue("");
+    };
+
+    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        submitMessage();
+    };
+
+    const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            submitMessage();
+        }
     };
 
     return (
@@ -32,11 +42,13 @@ export default function ChatInput({
                 <textarea
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
                     rows={1}
                     disabled={isLoading}
                     placeholder="Type your message here..."
                     className="max-h-40 min-h-[52px] flex-1 resize-none bg-transparent px-2 py-3 text-sm text-white outline-none placeholder:text-neutral-500 disabled:cursor-not-allowed disabled:opacity-60"
                 />
+
                 <button
                     type="submit"
                     disabled={isLoading}
@@ -47,7 +59,7 @@ export default function ChatInput({
             </form>
 
             <p className="mx-auto mt-3 max-w-4xl text-xs text-neutral-500">
-                Version 1 uses mock responses only. Real AI integration comes next.
+                Enter to send, Shift + Enter for a new line.
             </p>
         </div>
     );

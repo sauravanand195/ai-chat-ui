@@ -24,6 +24,7 @@ export async function POST(req: Request) {
                 model: "llama3.2:3b",
                 messages,
                 stream: false,
+                keep_alive: "0m",
             }),
         });
 

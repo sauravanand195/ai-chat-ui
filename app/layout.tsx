@@ -2,8 +2,14 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AI Chat UI",
-  description: "A clean Next.js chatbot UI starter project",
+  title: "AI Project Hub | Next.js AI Learning Lab",
+  description:
+    "Explore and build AI-powered Next.js projects step by step, including chatbot UI, structured output, RAG, and tool-calling workflows.",
+  icons: {
+    icon: {
+      url: "/vercel.svg",
+    },
+  },
 };
 
 export default function RootLayout({

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import ChatHeader from "@/components/chat-header";
-import ChatInput from "@/components/chat-input";
-import ChatMessages from "@/components/chat-messages";
-import ChatSidebar from "@/components/chat-sidebar";
+import ChatHeader from "@/components/chatbot/chat-header";
+import ChatInput from "@/components/chatbot/chat-input";
+import ChatMessages from "@/components/chatbot/chat-messages";
+import ChatSidebar from "@/components/chatbot/chat-sidebar";
 import { initialChats, initialMessages } from "@/lib/mock-data";
 import { ChatMessage } from "@/lib/types";
 

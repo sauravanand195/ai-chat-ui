@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     "Explore and build AI-powered Next.js projects step by step, including chatbot UI, structured output, RAG, and tool-calling workflows.",
   icons: {
     icon: {
-      url: "/vercel.svg",
+      url: "/ai.png",
     },
   },
 };

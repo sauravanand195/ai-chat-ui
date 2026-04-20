@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { ProjectPlanSchema } from '@/lib/schemas/project-plan'
 
+const OLLAMA_BASE_URL =
+    process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2:3b";
+
 export async function POST(req: Request) {
     try {
         const body = await req.json()
@@ -25,11 +29,11 @@ export async function POST(req: Request) {
 
                         Project goal: ${userGoal}`
 
-        const ollamaResponse = await fetch('http://localhost:11434/api/generate', {
+        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: 'llama3.2:3b',
+                model: OLLAMA_MODEL,
                 prompt,
                 format: 'json',
                 stream: false,

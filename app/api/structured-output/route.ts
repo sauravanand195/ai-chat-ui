@@ -1,80 +1,147 @@
-import { NextResponse } from 'next/server'
-import { ProjectPlanSchema } from '@/lib/schemas/project-plan'
+import { NextResponse } from "next/server";
+import {
+    ProjectPlanRequestSchema,
+    ProjectPlanSchema,
+    type ProjectPlan,
+} from "@/lib/schemas/project-plan";
 
 const OLLAMA_BASE_URL =
-    process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+    process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2:3b";
+
+type ProjectPlanRequest = {
+    goal: string;
+};
+
+type OllamaGenerateResponse = {
+    model: string;
+    created_at: string;
+    response: string;
+    done: boolean;
+    done_reason?: string;
+    thinking?: string;
+    total_duration?: number;
+    load_duration?: number;
+    prompt_eval_count?: number;
+    prompt_eval_duration?: number;
+    eval_count?: number;
+    eval_duration?: number;
+    error?: string;
+};
 
 export async function POST(req: Request) {
     try {
-        const body = await req.json()
-        const userGoal = body?.goal
+        const body: ProjectPlanRequest = await req.json();
 
-        if (!userGoal || typeof userGoal !== 'string') {
-            return NextResponse.json({ error: 'Goal is required.' }, { status: 400 })
+        const parsedBody = ProjectPlanRequestSchema.safeParse(body);
+
+        if (!parsedBody.success) {
+            return NextResponse.json(
+                {
+                    error: parsedBody.error.issues[0]?.message || "Invalid request body",
+                },
+                { status: 400 }
+            );
         }
 
-        // llama3.2:3b specific prompt that works reliably
-        const prompt = `You are an expert project planner. Return ONLY valid JSON matching this exact schema, nothing else:
+        const { goal }: ProjectPlanRequest = parsedBody.data;
 
-                        {
-                            "title": "string - project title",
-                            "difficulty": "Beginner|Intermediate|Advanced",
-                            "estimatedTime": "string - like '2-4 weeks'",
-                            "summary": "string - 1-2 sentence overview",
-                            "tools": ["array", "of", "tech", "tools"],
-                            "steps": ["array", "of", "5-8", "actionable", "steps"],
-                            "risks": ["array", "of", "2-4", "potential", "problems"]
-                        }
+        const prompt: string = `
+You are an expert project planner.
 
-                        Project goal: ${userGoal}`
+Return ONLY valid JSON with this exact structure:
+{
+    "title": "string",
+    "difficulty": "Beginner|Intermediate|Advanced",
+    "estimatedTime": "string",
+    "summary": "string",
+    "tools": ["string"],
+    "steps": ["string"],
+    "risks": ["string"]
+}
 
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+Project goal: ${goal}
+    `.trim();
+
+        const ollamaResponse: Response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
             body: JSON.stringify({
                 model: OLLAMA_MODEL,
                 prompt,
-                format: 'json',
+                format: "json",
                 stream: false,
                 options: {
-                    temperature: 0.1, // Low temp = more reliable JSON
+                    temperature: 0.1,
                     top_p: 0.9,
                 },
             }),
-        })
+        });
 
-        const data = await ollamaResponse.json()
+        const rawText: string = await ollamaResponse.text();
 
-        // Debug log - check your server terminal
-        console.log('Ollama response:', data)
+        let data: OllamaGenerateResponse;
+
+        try {
+            data = JSON.parse(rawText) as OllamaGenerateResponse;
+        } catch {
+            return NextResponse.json(
+                {
+                    error: "Ollama returned HTML or invalid JSON",
+                    preview: rawText.slice(0, 300),
+                },
+                { status: 500 }
+            );
+        }
 
         if (!ollamaResponse.ok || !data.response) {
-            return NextResponse.json({ error: `Ollama failed: ${data.error || 'No response'}` }, { status: 500 })
+            return NextResponse.json(
+                {
+                    error: `Ollama failed: ${data.error || "No response"}`,
+                },
+                { status: 500 }
+            );
         }
 
-        // Parse and validate
-        let parsed
+        let parsedModelResponse: ProjectPlan;
+
         try {
-            parsed = JSON.parse(data.response)
+            parsedModelResponse = JSON.parse(data.response) as ProjectPlan;
         } catch {
-            return NextResponse.json({ error: 'Invalid JSON from model' }, { status: 500 })
+            return NextResponse.json(
+                {
+                    error: "Invalid JSON returned by model",
+                    preview: data.response.slice(0, 300),
+                },
+                { status: 500 }
+            );
         }
 
-        // Safe fallback for UI
-        const validated = ProjectPlanSchema.parse({
-            title: parsed.title || 'Untitled Project',
-            difficulty: parsed.difficulty || 'Intermediate',
-            estimatedTime: parsed.estimatedTime || '1-2 weeks',
-            summary: parsed.summary || 'No summary available',
-            tools: parsed.tools || [],
-            steps: parsed.steps || [],
-            risks: parsed.risks || [],
-        })
+        const validatedPlan = ProjectPlanSchema.safeParse(parsedModelResponse);
 
-        return NextResponse.json({ plan: validated })
+        if (!validatedPlan.success) {
+            return NextResponse.json(
+                {
+                    error: "Model returned invalid project plan structure",
+                    details: validatedPlan.error.flatten(),
+                },
+                { status: 500 }
+            );
+        }
+
+        const plan: ProjectPlan = validatedPlan.data;
+
+        return NextResponse.json({ plan });
     } catch (error) {
-        console.error('Route error:', error)
-        return NextResponse.json({ error: 'Server error' }, { status: 500 })
+        console.error("Route error:", error);
+
+        return NextResponse.json(
+            {
+                error: error instanceof Error ? error.message : "Server error",
+            },
+            { status: 500 }
+        );
     }
 }

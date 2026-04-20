@@ -10,4 +10,8 @@ export const ProjectPlanSchema = z.object({
     risks: z.array(z.string()),
 });
 
+export const ProjectPlanRequestSchema = z.object({
+    goal: z.string().min(1, "Goal is required"),
+});
+
 export type ProjectPlan = z.infer<typeof ProjectPlanSchema>;

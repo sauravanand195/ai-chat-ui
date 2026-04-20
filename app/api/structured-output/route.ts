@@ -30,6 +30,7 @@ type OllamaGenerateResponse = {
 };
 
 export async function POST(req: Request) {
+    console.log(' IN ST -> ',  );
     try {
         const body: ProjectPlanRequest = await req.json();
 
@@ -43,6 +44,7 @@ export async function POST(req: Request) {
                 { status: 400 }
             );
         }
+
 
         const { goal }: ProjectPlanRequest = parsedBody.data;
 
@@ -63,7 +65,7 @@ Return ONLY valid JSON with this exact structure:
 Project goal: ${goal}
     `.trim();
 
-        const ollamaResponse: Response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
+        const ollamaResponse: Response = await fetch(`http://localhost:11434/api/generate`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

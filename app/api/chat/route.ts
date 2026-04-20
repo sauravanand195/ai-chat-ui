@@ -8,6 +8,7 @@ const OLLAMA_BASE_URL =
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2:3b";
 
 export async function POST(req: Request) {
+
     try {
         const body = await req.json();
         const messages = body?.messages as IncomingMessage[] | undefined;
@@ -18,6 +19,8 @@ export async function POST(req: Request) {
                 { status: 400 }
             );
         }
+
+        console.log('messages', messages)
 
         // const response = await fetch("http://localhost:11434/api/chat", {
         //     method: "POST",
@@ -32,7 +35,7 @@ export async function POST(req: Request) {
         //     }),
         // });
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetch(`http://localhost:11434/api/chat`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

@@ -73,6 +73,7 @@ Project goal: ${goal}
                 prompt,
                 format: "json",
                 stream: false,
+                keep_alive: "0m",
                 options: {
                     temperature: 0.1,
                     top_p: 0.9,

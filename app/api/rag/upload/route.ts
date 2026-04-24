@@ -1,4 +1,5 @@
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { extractText, getDocumentProxy } from "unpdf";
 
 export const runtime = "nodejs";
 
@@ -19,20 +20,26 @@ export async function POST(req: Request) {
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
+        let text = "";
+
         if (
-            !(
-                fileType === "text/plain" ||
-                fileName.endsWith(".txt") ||
-                fileName.endsWith(".md")
-            )
+            fileType === "text/plain" ||
+            fileName.endsWith(".txt") ||
+            fileName.endsWith(".md")
         ) {
+            text = buffer.toString("utf-8");
+        } else if (fileType === "application/pdf" || fileName.endsWith(".pdf")) {
+            const pdf = await getDocumentProxy(new Uint8Array(buffer));
+            const result = await extractText(pdf, { mergePages: true });
+            text = result.text;
+        } else {
             return Response.json(
-                { error: "For now, upload only TXT or MD files." },
+                {
+                    error: "Unsupported file type. Please upload a PDF, TXT, or MD file.",
+                },
                 { status: 400 }
             );
         }
-
-        const text = buffer.toString("utf-8");
 
         if (!text.trim()) {
             return Response.json(

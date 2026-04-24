@@ -90,7 +90,10 @@ export default function RagPage() {
                     <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur">
                         <h2 className="text-xl font-semibold text-white">Upload document</h2>
                         <p className="mt-2 text-sm leading-7 text-zinc-400">
-                            Supported formats: PDF, TXT, MD
+                            Supported formats for now: TXT, MD
+                        </p>
+                        <p className="mt-2 text-sm leading-7 text-zinc-400">
+                            PDF support will be added next
                         </p>
 
                         <div className="mt-6 rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-6">

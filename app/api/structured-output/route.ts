@@ -65,10 +65,11 @@ Return ONLY valid JSON with this exact structure:
 Project goal: ${goal}
     `.trim();
 
-        const ollamaResponse: Response = await fetch(`http://localhost:11434/api/generate`, {
+        const ollamaResponse: Response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "Authorization": `Bearer ${process.env.OLLAMA_PROXY_TOKEN}`,
             },
             body: JSON.stringify({
                 model: OLLAMA_MODEL,

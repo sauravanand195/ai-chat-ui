@@ -3,7 +3,7 @@ type IncomingMessage = {
     content: string;
 };
 
-const OLLAMA_BASE_URL = 
+const OLLAMA_BASE_URL =
     process.env.OLLAMA_BASE_URL || "http://localhost:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2:3b";
 
@@ -20,25 +20,11 @@ export async function POST(req: Request) {
             );
         }
 
-        console.log('messages', messages)
-
-        // const response = await fetch("http://localhost:11434/api/chat", {
-        //     method: "POST",
-        //     headers: {
-        //         "Content-Type": "application/json",
-        //     },
-        //     body: JSON.stringify({
-        //         model: "llama3.2:3b",
-        //         messages,
-        //         stream: false,
-        //         keep_alive: "0m",
-        //     }),
-        // });
-
-        const response = await fetch(`http://localhost:11434/api/chat`, {
+        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "Authorization": `Bearer ${process.env.OLLAMA_PROXY_TOKEN}`,
             },
             body: JSON.stringify({
                 model: OLLAMA_MODEL,

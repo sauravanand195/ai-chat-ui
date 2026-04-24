@@ -32,18 +32,6 @@ export default function Home() {
         setIsLoading(true);
 
         try {
-            // const apiMessages = [
-            //   {
-            //     role: "system" as const,
-            //     content:
-            //       "You are a helpful AI assistant inside a Next.js learning project. Keep answers clear, short, and beginner friendly.",
-            //   },
-            //   ...updatedMessages.map(({ role, content }) => ({
-            //     role,
-            //     content,
-            //   })),
-            // ];
-
             const trimmedMessages = updatedMessages.slice(-6);
 
             const apiMessages = [
@@ -57,8 +45,6 @@ export default function Home() {
                     content,
                 })),
             ];
-
-            console.log('apiMessages -> ', apiMessages);
 
             const response = await fetch("/api/chat", {
                 method: "POST",
